@@ -27,17 +27,18 @@ class WebAuthController extends Controller
             'password' => 'required|string|min:6',
             'role' => 'required|in:user,admin'
         ]);
-        
-        $user = User::create([
+
+        User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'role' => $request->role
         ]);
 
-        Auth::login($user);
+        // Auth::login($user);
 
-        return redirect()->route($user->role === 'admin' ? 'admin.dashboard' : 'user.home');
+        // return redirect()->route($user->role === 'admin' ? 'admin.dashboard' : 'user.home');
+        return redirect()->route('login')->with('success', 'Registrasi berhasil! Silakan login.');
     }
 
     public function login(Request $request)
