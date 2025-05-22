@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Product;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 
 class ProductApiController extends Controller
 {
@@ -17,28 +18,56 @@ class ProductApiController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
-            'name' => 'required',
-            'description' => 'required',
-            'price' => 'required|numeric',
-            'category' => 'required',
-            'image' => 'required|image|mimes:jpg,jpeg,png|max:2048',
-        ]);
+        Log::info('Nama:', ['name' => $request->input('name')]);
+        Log::info('Data yang Diterima:', $request->all());
 
-        $path = $request->file('image')->store('public/images', 'public');
+        try {
+            // Validasi input
+            $request->validate([
+                'name' => 'required',
+                'description' => 'required',
+                'price' => 'required|numeric',
+                'category' => 'required',
+                'image' => 'required|image|mimes:jpg,jpeg,png|max:5120',
+            ]);
 
-        $imageName = str_replace('public/', 'storage/', $path);
+            // Simpan gambar ke public storage
+            if (!$request->hasFile('image')) {
+                Log::error('Gambar tidak ditemukan di request.');
+                return response()->json(['error' => 'Gambar tidak ditemukan'], 400);
+            }
 
-        $product = Product::create([
-            'name' => $request->name,
-            'description' => $request->description,
-            'price' => $request->price,
-            'category' => $request->category,
-            'image' => $imageName
-        ]);
+            $path = $request->file('image')->store('images', 'public'); // simpan ke storage/app/public/images
+            $imageName = Storage::url($path); // hasilnya: /storage/images/namafile.jpg
 
-        return response()->json($product, 201);
+            Log::info('Gambar berhasil disimpan di: ' . $imageName);
+
+            // Simpan data ke database
+            $product = Product::create([
+                'name' => $request->name,
+                'description' => $request->description,
+                'price' => $request->price,
+                'category' => $request->category,
+                'image' => $imageName
+            ]);
+
+            Log::info('Produk berhasil ditambahkan', ['product' => $product]);
+
+            return response()->json([
+                'message' => 'Produk berhasil ditambahkan',
+                'data' => $product
+            ], 201);
+        } catch (\Exception $e) {
+            // Tangkap kesalahan dan tulis ke log
+            Log::error('Gagal menambah produk: ' . $e->getMessage());
+
+            return response()->json([
+                'message' => 'Terjadi kesalahan saat menambahkan produk',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
+
 
     public function show(string $id)
     {
@@ -52,28 +81,68 @@ class ProductApiController extends Controller
         return response()->json($product);
     }
 
-    public function update(Request $request, string $id)
+    public function update(Request $request, $id)
     {
-        $product = Product::findOrFail($id);
+        Log::info("Memulai update produk", ['id' => $id]);
 
-        $product->name = $request->name ?? $product->name;
-        $product->description = $request->description ?? $product->description;
-        $product->price = $request->price ?? $product->price;
-        $product->category = $request->category ?? $product->category;
+        try {
+            $product = Product::findOrFail($id);
 
-        if ($request->hasFile('image')) {
-            if ($product->image && Storage::exists(str_replace('/storage/', 'public/', $product->image))) {
-                Storage::delete(str_replace('/storage/', 'public/', $product->image));
+            Log::info("Data request", $request->all());
+
+            // Validasi input
+            $validated = $request->validate([
+                'name' => 'nullable|string',
+                'description' => 'nullable|string',
+                'category' => 'nullable|string',
+                'price' => 'nullable|numeric',
+                'image' => 'nullable|image|max:5120',
+            ]);
+
+            // Cek dan proses gambar baru jika ada
+            if ($request->hasFile('image')) {
+                Log::info("Gambar ditemukan, memproses...");
+
+                // Hapus gambar lama jika ada
+                if ($product->image && file_exists(public_path($product->image))) {
+                    unlink(public_path($product->image));
+                    Log::info("Gambar lama dihapus", ['path' => $product->image]);
+                } else {
+                    Log::info("Gambar lama tidak ditemukan atau sudah dihapus sebelumnya");
+                }
+
+                // Simpan gambar baru
+                $file = $request->file('image');
+                $path = $file->store('images', 'public');
+                $validated['image'] = '/storage/' . $path;
+
+                Log::info("Gambar baru disimpan", ['path' => $validated['image']]);
+            } else {
+                Log::info("Tidak ada file image dalam request");
             }
 
-            $path = $request->file('image')->store('public/images');
-            $product->image = Storage::url($path);
+            // Update produk dengan data terbaru
+            $product->update($validated);
+
+            Log::info("Produk berhasil diupdate", ['product' => $product]);
+
+            return response()->json([
+                'message' => 'Produk berhasil diupdate',
+                'product' => $product
+            ]);
+        } catch (\Exception $e) {
+            Log::error("Terjadi kesalahan saat update produk", [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'message' => 'Gagal update produk',
+                'error' => $e->getMessage()
+            ], 500);
         }
-
-        $product->save();
-
-        return response()->json($product);
     }
+
 
     public function destroy(string $id)
     {
