@@ -7,12 +7,14 @@ use App\Http\Controllers\PageController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\WebAuthController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\ProductController;
 use App\Http\Controllers\UserController;
 use App\Http\Middleware\AdminMiddleware;
 use App\Http\Middleware\UserMiddleware;
+use App\Http\Controllers\CartController;
 
 Route::get('/', function () {
-    return view('welcome');
+    return view('landing');
 });
 
 Route::get('/register', [PageController::class, 'register']);
@@ -35,7 +37,7 @@ Route::get('/user/home', function () {
 
 Route::post('/logout', function () {
     Auth::logout();
-    return redirect('/login');
+    return redirect('/');
 })->name('logout');
 
 
@@ -54,3 +56,9 @@ Route::middleware([AdminMiddleware::class])->group(function () {
 Route::middleware([UserMiddleware::class])->group(function () {
     Route::get('/home', [UserController::class, 'index'])->name('user.home');
 });
+
+Route::get('/product/{id}', [ProductController::class, 'show'])->name('product.detail');
+Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
+Route::post('/cart/add/{productId}', [CartController::class, 'add'])->name('cart.add');
+Route::put('/cart/{id}', [CartController::class, 'update'])->name('cart.update');
+Route::delete('/cart/{id}', [CartController::class, 'remove'])->name('cart.remove');
