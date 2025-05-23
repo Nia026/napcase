@@ -143,7 +143,6 @@ class ProductApiController extends Controller
         }
     }
 
-
     public function destroy(string $id)
     {
         $product = Product::findOrFail($id);

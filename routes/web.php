@@ -62,3 +62,11 @@ Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
 Route::post('/cart/add/{productId}', [CartController::class, 'add'])->name('cart.add');
 Route::put('/cart/{id}', [CartController::class, 'update'])->name('cart.update');
 Route::delete('/cart/{id}', [CartController::class, 'remove'])->name('cart.remove');
+Route::get('/admin/products', function () {
+    return view('admin.products');
+});
+Route::get('admin/create', [ProductController::class, 'create']);
+Route::post('admin/products', [ProductController::class, 'store']);
+Route::get('admin/edit/{id}', [ProductController::class, 'edit']);
+Route::put('admin/products/{id}', [ProductController::class, 'update']);
+Route::delete('/products/{id}', [ProductController::class, 'destroy']);
