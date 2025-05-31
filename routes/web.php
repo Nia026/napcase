@@ -70,3 +70,7 @@ Route::post('admin/products', [ProductController::class, 'store']);
 Route::get('admin/edit/{id}', [ProductController::class, 'edit']);
 Route::put('admin/products/{id}', [ProductController::class, 'update']);
 Route::delete('/products/{id}', [ProductController::class, 'destroy']);
+
+Route::get('/admin/metode-pembayaran', function () {
+    return view('admin.metode-pembayaran');
+});
