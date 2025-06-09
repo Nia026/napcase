@@ -4,111 +4,148 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Homepage User</title>
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <title>Homepage User - NapCase</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
-    integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg=="
     crossorigin="anonymous" referrerpolicy="no-referrer" />
-  <style>
-    /* Efek hover sederhana untuk produk */
-    .product-item:hover {
-      transform: scale(1.02);
-      transition: transform 0.2s ease-in-out;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    }
-  </style>
 </head>
 
 <body class="bg-gray-100 font-sans">
-  <header class="bg-white shadow-md sticky top-0 z-10">
-    <nav class="container mx-auto px-4 py-3 flex items-center justify-between">
-      <div class="logo">
-        <a href="/home" class="text-xl font-semibold text-gray-800">Nap<span class="text-indigo-600">Case</span></a>
-      </div>
-      <div class="flex items-center space-x-4">
-        <div class="relative">
-          <input type="text" id="search-input"
-            class="bg-gray-100 border border-gray-300 rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-            placeholder="Cari casing...">
-          <button class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500">
-            <i class="fas fa-search"></i>
-          </button>
-        </div>
-        <a href="/info.html" class="text-gray-700 hover:text-indigo-600 transition duration-300">
-          <i class="fas fa-info-circle mr-1"></i> Informasi Pemesanan
-        </a>
-        <a href="/cart" class="relative text-gray-700 hover:text-indigo-600 transition duration-300">
-          <i class="fas fa-shopping-cart mr-1"></i> Keranjang
-        </a>
-      </div>
-    </nav>
-  </header>
+
+  <x-navbar />
 
   <main class="container mx-auto px-4 py-8">
-    <section id="product-list">
-      <h2 class="text-2xl font-semibold text-gray-800 mb-6">Daftar Casing</h2>
-      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+    <!-- Banner -->
+    <section class="mb-8 rounded-lg overflow-hidden shadow-md">
+      <img src="{{ asset('images/benner.png') }}" alt="Banner Promo" class="w-full h-auto object-cover">
+    </section>
+
+    <!-- Produk -->
+    <section>
+      <h2 class="text-2xl font-semibold text-gray-800 mb-6">Casing Terbaru & Populer</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6" id="product-grid">
+        <!-- Produk akan dimuat via fetch -->
       </div>
     </section>
   </main>
 
-  <footer class="text-center py-6 text-sm text-gray-500 bg-white mt-8">
-    &copy; {{ date('Y') }} Napcase. All rights reserved.
-  </footer>
+  <x-footer />
+
+  <!-- Notifikasi keranjang -->
+  <div id="cart-notification"
+    class="fixed bottom-6 right-6 bg-green-500 text-white px-6 py-4 rounded-lg shadow-lg flex items-center space-x-4 opacity-0 pointer-events-none transition-opacity duration-500 z-50">
+    <i class="fas fa-check-circle text-white text-xl"></i>
+    <span id="cart-notification-message">Produk berhasil ditambahkan ke keranjang!</span>
+    <button onclick="closeCartNotification()"
+      class="ml-2 text-white hover:text-gray-200 text-xl font-bold">&times;</button>
+  </div>
 
   <script>
-    const productListSection = document.getElementById('product-list').querySelector('.grid');
-    const searchInput = document.getElementById('search-input');
-    let productsData = []; // Menyimpan semua data produk dari API
+    document.addEventListener("DOMContentLoaded", function() {
+      const productGrid = document.getElementById("product-grid");
+      const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
-    function fetchProducts() {
-      fetch('/api/products') // Pastikan URL ini benar
-        .then(response => response.json())
-        .then(data => {
-          productsData = data; // Simpan data ke variabel global
-          renderProducts(data);
-        })
-        .catch(error => {
-          console.error('Error fetching products:', error);
-          productListSection.innerHTML = '<p class="text-red-500">Gagal memuat produk.</p>';
-        });
-    }
+      function showCartNotification(message = "Produk berhasil ditambahkan ke keranjang!") {
+        const notification = document.getElementById("cart-notification");
+        const messageEl = document.getElementById("cart-notification-message");
 
-    function renderProducts(products) {
-      productListSection.innerHTML = '';
-      if (products.length === 0) {
-        productListSection.innerHTML = '<p class="text-gray-600">Tidak ada produk yang ditemukan.</p>';
-        return;
+        messageEl.textContent = message;
+        notification.classList.remove("opacity-0", "pointer-events-none");
+        notification.classList.add("opacity-100");
+
+        setTimeout(() => {
+          notification.classList.add("opacity-0", "pointer-events-none");
+          notification.classList.remove("opacity-100");
+        }, 3000);
       }
-      products.forEach(product => {
-        const productDiv = document.createElement('div');
-        productDiv.classList.add('product-item', 'bg-white', 'rounded-lg', 'shadow-md', 'overflow-hidden');
-        productDiv.innerHTML = `
-                            <div class="p-4"> <img src="${product.image}" alt="${product.name}" class="w-full h-48 object-cover">
-                                <h3 class="text-lg font-semibold text-gray-800 mt-4 mb-2">${product.name}</h3>
-                                <p class="text-gray-600 text-sm mb-3">${product.description ? product.description.substring(0, 50) + '...' : ''}</p>
-                                <div class="flex items-center justify-between">
-                                    <span class="text-indigo-600 font-bold">Rp ${parseFloat(product.price).toLocaleString()}</span>
-                                    <a href="/product/${product.id}" class="bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-full focus:outline-none focus:shadow-outline transition duration-300">
-                                        Lihat Detail
-                                    </a>
-                                </div>
-                            </div>
-                        `;
-        productListSection.appendChild(productDiv);
-      });
-    }
 
-    // Fitur Pencarian
-    searchInput.addEventListener('input', function() {
-      const searchTerm = this.value.toLowerCase();
-      const filteredProducts = productsData.filter(product =>
-        product.name.toLowerCase().includes(searchTerm)
-      );
-      renderProducts(filteredProducts);
+      function closeCartNotification() {
+        const notification = document.getElementById("cart-notification");
+        notification.classList.add("opacity-0", "pointer-events-none");
+        notification.classList.remove("opacity-100");
+      }
+
+      function fetchProducts() {
+        fetch("/api/products")
+          .then(res => res.json())
+          .then(products => {
+            if (!Array.isArray(products) || products.length === 0) {
+              productGrid.innerHTML =
+                '<p class="text-gray-600 col-span-full text-center">Tidak ada produk ditemukan.</p>';
+              return;
+            }
+
+            products.forEach(product => {
+              const div = document.createElement("div");
+              div.className =
+                "product-item bg-white rounded-lg shadow-md overflow-hidden flex flex-col hover:scale-105 transition-transform duration-200";
+              div.innerHTML = `
+                <img src="${product.image}" alt="${product.name}" class="w-full h-48 object-cover">
+                <div class="p-4 flex-grow flex flex-col justify-between">
+                  <div>
+                    <h3 class="text-lg font-semibold text-gray-800 mb-2">${product.name}</h3>
+                    <p class="text-gray-600 text-sm mb-3">
+                      ${product.description ? product.description.slice(0, 70) + '...' : 'Tidak ada deskripsi.'}
+                    </p>
+                  </div>
+                  <div class="mt-auto">
+                    <div class="flex items-center justify-between mb-3">
+                      <span class="text-indigo-600 font-bold text-lg">Rp ${parseFloat(product.price).toLocaleString('id-ID')}</span>
+                    </div>
+                    <div class="flex flex-col space-y-2">
+                      <a href="/product/${product.id}" class="block w-full text-center bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 px-4 rounded-full transition duration-300">
+                        Lihat Detail
+                      </a>
+                      <form method="POST" class="add-to-cart-form" data-id="${product.id}">
+                        <input type="hidden" name="_token" value="${csrfToken}">
+                        <button type="submit" class="w-full text-center bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded-full transition duration-300">
+                          <i class="fas fa-cart-plus mr-2"></i> Tambahkan ke Keranjang
+                        </button>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+              `;
+              productGrid.appendChild(div);
+            });
+
+            attachAddToCartEvents();
+          })
+          .catch(err => {
+            productGrid.innerHTML = '<p class="text-red-500 col-span-full text-center">Gagal memuat produk.</p>';
+            console.error(err);
+          });
+      }
+
+      function attachAddToCartEvents() {
+        document.querySelectorAll(".add-to-cart-form").forEach(form => {
+          form.addEventListener("submit", function(e) {
+            e.preventDefault();
+            const productId = this.getAttribute("data-id");
+
+            const formData = new FormData();
+            formData.append('_token', csrfToken);
+            formData.append('quantity', 1);
+
+            fetch("/cart/add/" + productId, {
+                method: "POST",
+                body: formData
+              })
+              .then(() => {
+                // Tidak parsing JSON lagi, langsung tampilkan notifikasi
+                showCartNotification("Produk berhasil ditambahkan ke keranjang!");
+              })
+              .catch(err => {
+                showCartNotification("Gagal menambahkan produk ke keranjang!");
+                console.error(err);
+              });
+          });
+        });
+      }
+
+      fetchProducts();
     });
-
-    fetchProducts();
   </script>
 </body>
 

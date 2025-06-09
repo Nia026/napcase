@@ -12,6 +12,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Middleware\AdminMiddleware;
 use App\Http\Middleware\UserMiddleware;
 use App\Http\Controllers\CartController;
+use App\Http\Controllers\TransaksiController;
 
 Route::get('/', function () {
     return view('landing');
@@ -47,6 +48,8 @@ Route::middleware(['auth', 'admin'])->group(function () {
 
 Route::middleware(['auth', 'user'])->group(function () {
     Route::get('/user/home', [UserController::class, 'index'])->name('user.home');
+
+    //Route::post('/cart/add/{productId}', [CartController::class, 'add'])->name('cart.add');
 });
 
 Route::middleware([AdminMiddleware::class])->group(function () {
@@ -74,3 +77,13 @@ Route::delete('/products/{id}', [ProductController::class, 'destroy']);
 Route::get('/admin/metode-pembayaran', function () {
     return view('admin.metode-pembayaran');
 });
+Route::get('/admin/transaksi', function () {
+    return view('admin.transaksi');
+});
+
+Route::get('/informasi', function () {
+    return view('user.informasi');
+});
+
+Route::get('/checkout', [TransaksiController::class, 'checkoutForm'])->name('checkout.form');
+Route::post('/checkout', [TransaksiController::class, 'storeCheckout'])->name('checkout.store');

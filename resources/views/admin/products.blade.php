@@ -12,52 +12,20 @@
       flex-direction: column;
     }
 
-    .sidebar {
-      width: 250px;
-      background-color: #343a40;
-      color: white;
-      position: fixed;
-      top: 0;
-      bottom: 0;
-      padding: 1rem;
-    }
-
-    .sidebar a {
-      color: white;
-      display: block;
-      padding: 0.5rem 0;
-      text-decoration: none;
-    }
-
-    .sidebar a:hover {
-      background-color: #495057;
-    }
-
     .main {
       margin-left: 260px;
+      /* sesuai lebar sidebar */
       padding: 1rem;
       flex: 1;
-    }
-
-    footer {
-      background-color: #f8f9fa;
-      text-align: center;
-      padding: 10px;
-      margin-left: 260px;
     }
   </style>
 </head>
 
 <body>
+  <!-- Sidebar Admin -->
+  <x-admin-sidebar />
 
-  <div class="sidebar">
-    <h4>Napcase Admin</h4>
-    <hr>
-    <a href="{{ url('admin/products') }}">Manajemen Produk</a>
-    <a href="{{ url('admin/metode-pembayaran') }}">Manajemen Metode Pembayaran</a>
-    <a href="{{ url('admin/transaksi') }}">Transaksi</a>
-  </div>
-
+  <!-- Konten Utama -->
   <div class="main">
     <nav class="navbar navbar-expand-lg bg-light mb-4">
       <div class="container-fluid">
@@ -92,9 +60,6 @@
       </div>
     </div>
 
-    <footer class="mt-4">
-      <small>&copy; 2025 Napcase Admin</small>
-    </footer>
   </div>
 
   <script>

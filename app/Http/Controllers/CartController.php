@@ -5,13 +5,14 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use App\Models\Product;
+use App\Models\MetodePembayaran;
 
 class CartController extends Controller
 {
     public function index(): View
     {
-        $cartItems = session('cart', []); // Ambil data keranjang dari session
-        return view('user.cart', compact('cartItems')); // Tampilkan view cart.blade.php
+        $cartItems = session('cart', []);
+        return view('user.cart', compact('cartItems'));
     }
 
     public function update(Request $request, $productId)
@@ -40,22 +41,50 @@ class CartController extends Controller
 
     public function add(Request $request, $productId)
     {
-        $product = Product::findOrFail($productId);
-        $cart = session()->get('cart', []);
+        try {
+            $product = Product::findOrFail($productId);
+            $cart = session()->get('cart', []);
 
-        if (isset($cart[$productId])) {
-            $cart[$productId]['quantity']++;
-        } else {
-            $cart[$productId] = [
-                'id' => $product->id,
-                'name' => $product->name,
-                'quantity' => 1,
-                'price' => $product->price,
-                'image' => $product->image,
-            ];
+            if (isset($cart[$productId])) {
+                $cart[$productId]['quantity']++;
+            } else {
+                $cart[$productId] = [
+                    'id' => $product->id,
+                    'name' => $product->name,
+                    'quantity' => 1,
+                    'price' => $product->price,
+                    'image' => $product->image,
+                ];
+            }
+
+            session()->put('cart', $cart);
+
+            // Periksa apakah request ingin JSON (dari fetch)
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Produk berhasil ditambahkan ke keranjang!',
+                    'cart' => $cart
+                ]);
+            }
+
+            return redirect()->route('cart.index')->with('success', 'Produk berhasil ditambahkan ke keranjang!');
+        } catch (\Exception $e) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Terjadi kesalahan saat menambahkan ke keranjang.',
+                    'error' => $e->getMessage()
+                ], 500);
+            }
+
+            return redirect()->back()->with('error', 'Terjadi kesalahan.');
         }
+    }
 
-        session()->put('cart', $cart);
-        return redirect()->route('cart.index')->with('success', 'Produk berhasil ditambahkan ke keranjang!');
+    public function showCheckout()
+    {
+        $cartItems = session()->get('cart', []);
+        $metodePembayaran = MetodePembayaran::all();
+
+        return view('user.checkout', compact('cartItems', 'metodePembayaran'));
     }
 }

@@ -9,56 +9,24 @@
     body {
       display: flex;
       min-height: 100vh;
-      flex-direction: column;
-    }
-
-    .sidebar {
-      width: 250px;
-      background-color: #343a40;
-      color: white;
-      position: fixed;
-      top: 0;
-      bottom: 0;
-      padding: 1rem;
-    }
-
-    .sidebar a {
-      color: white;
-      display: block;
-      padding: 0.5rem 0;
-      text-decoration: none;
-    }
-
-    .sidebar a:hover {
-      background-color: #495057;
+      margin: 0;
     }
 
     .main {
       margin-left: 260px;
       padding: 1rem;
       flex: 1;
-    }
-
-    footer {
-      background-color: #f8f9fa;
-      text-align: center;
-      padding: 10px;
-      margin-left: 260px;
+      display: flex;
+      flex-direction: column;
     }
   </style>
 </head>
 
 <body>
-  <!-- Sidebar -->
-  <div class="sidebar">
-    <h4>Napcase Admin</h4>
-    <hr>
-    <a href="{{ url('admin/products') }}">Manajemen Produk</a>
-    <a href="{{ url('admin/metode-pembayaran') }}">Manajemen Metode Pembayaran</a>
-    <a href="{{ url('admin/transaksi') }}">Transaksi</a>
-  </div>
+  {{-- Sidebar --}}
+  <x-admin-sidebar />
 
-  <!-- Main content -->
+  {{-- Main Content --}}
   <div class="main">
     <nav class="navbar navbar-expand-lg bg-light mb-4">
       <div class="container-fluid">
@@ -66,52 +34,55 @@
       </div>
     </nav>
 
-    <div class="container-fluid">
-      <form id="metodeForm" class="mb-4">
-        <input type="hidden" id="metodeId" />
-        <div class="row g-2">
-          <div class="col-md-4">
-            <input type="text" id="name" class="form-control" placeholder="Nama Bank" required />
-          </div>
-          <div class="col-md-4">
-            <input type="text" id="value" class="form-control" placeholder="Nomor Rekening" required />
-          </div>
-          <div class="col-md-4">
-            <button type="submit" class="btn btn-primary me-2" id="submitBtn">Tambah</button>
-            <button type="button" class="btn btn-secondary" onclick="resetForm()">Batal</button>
+    <div class="container">
+      <div class="card shadow mb-4">
+        <div class="card-body">
+          <form id="metodeForm">
+            <input type="hidden" id="metodeId" />
+            <div class="row g-2">
+              <div class="col-md-4">
+                <input type="text" id="name" class="form-control" placeholder="Nama Bank" required />
+              </div>
+              <div class="col-md-4">
+                <input type="text" id="value" class="form-control" placeholder="Nomor Rekening" required />
+              </div>
+              <div class="col-md-4">
+                <button type="submit" class="btn btn-primary me-2" id="submitBtn">Tambah</button>
+                <button type="button" class="btn btn-secondary" onclick="resetForm()">Batal</button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div class="card shadow">
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-bordered table-hover align-middle text-center mb-0">
+              <thead class="table-dark">
+                <tr>
+                  <th>No</th>
+                  <th>Nama Bank</th>
+                  <th>Nomor Rekening</th>
+                  <th>Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="metodeBody">
+                <tr>
+                  <td colspan="4">Memuat data...</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
-      </form>
-
-      <div class="table-responsive">
-        <table class="table table-bordered table-hover align-middle text-center">
-          <thead class="table-dark">
-            <tr>
-              <th>ID</th>
-              <th>Nama Bank</th>
-              <th>Nomor Rekening</th>
-              <th>Aksi</th>
-            </tr>
-          </thead>
-          <tbody id="metodeBody">
-            <tr>
-              <td colspan="4">Memuat data...</td>
-            </tr>
-          </tbody>
-        </table>
       </div>
     </div>
 
-    <!-- Footer -->
-    <footer class="mt-4">
-      <small>&copy; 2025 Napcase Admin</small>
-    </footer>
   </div>
 
   <script>
     const API_URL = "http://127.0.0.1:8000/api/MetodePembayaran";
 
-    // Muat data metode pembayaran
     function loadMetode() {
       fetch(API_URL)
         .then((res) => res.json())
@@ -142,7 +113,6 @@
         });
     }
 
-    // Tambah/Edit metode
     document.getElementById("metodeForm").addEventListener("submit", function(e) {
       e.preventDefault();
 
@@ -175,7 +145,6 @@
         .catch(() => alert("Terjadi kesalahan saat menyimpan data"));
     });
 
-    // Isi form untuk edit
     function editMetode(id, name, value) {
       document.getElementById("metodeId").value = id;
       document.getElementById("name").value = name;
@@ -183,7 +152,6 @@
       document.getElementById("submitBtn").textContent = "Perbarui";
     }
 
-    // Hapus metode
     function hapusMetode(id) {
       if (confirm("Yakin ingin menghapus metode ini?")) {
         fetch(`${API_URL}/${id}`, {
@@ -201,14 +169,12 @@
       }
     }
 
-    // Reset form
     function resetForm() {
       document.getElementById("metodeForm").reset();
       document.getElementById("metodeId").value = "";
       document.getElementById("submitBtn").textContent = "Tambah";
     }
 
-    // Inisialisasi
     loadMetode();
   </script>
 </body>
